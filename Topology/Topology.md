@@ -14,8 +14,7 @@ switching, forwarding traffic across the MPLS backbone.
 for customer networks, connected to end devices (PC1 and PC2) via subnets
 192.168.10.0/24 and 192.168.20.0/24, respectively.
 + Internet Gateway (IGW): The IGW router provides external connectivity, imple-
-menting NAT (Network Address Translation) for outbound internet access via in-
-terface e0/1.
+menting NAT (Network Address Translation) for outbound internet access via interface e0/1.
 
 
 This topology ensures efficient routing, high availability, and scalability for enterprise
