@@ -1,0 +1,278 @@
+Current configuration : 4714 bytes
+!
+version 15.4
+service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+!
+hostname PE1
+!
+boot-start-marker
+boot-end-marker
+!
+aqm-register-fnf
+!
+!
+no aaa new-model
+clock timezone -05 -5 0
+mmi polling-interval 60
+no mmi auto-configure
+no mmi pvc
+mmi snmp-timeout 180
+!
+!
+!
+!
+!
+!
+!
+!
+
+
+!
+ip vrf IOT
+ rd 65001:1
+ route-target export 65001:1
+ route-target import 65001:1
+!
+!
+!
+!
+ip cef
+no ipv6 cef
+!
+multilink bundle-name authenticated
+!
+!
+!
+!
+!
+!
+!
+!
+!
+redundancy
+!
+!
+!
+class-map match-all CLASS-MQTT-MIX
+ match access-group name MQTT-TRAFFIC
+class-map match-all MQTT-DATA
+ match access-group name MQTT-DATA
+class-map match-all MQTT-VOICE
+ match access-group name MQTT-VOICE
+!
+policy-map POLICY-MQTT-DATA-IN
+ class MQTT-DATA
+  police 512000 conform-action transmit  exceed-action drop 
+  set mpls experimental imposition 3
+policy-map POLICY-MQTT-DATA-OUT
+ class MQTT-DATA
+  set dscp af21
+  bandwidth 512
+policy-map MQTT-DATA-POLICY
+ class class-default
+  set mpls experimental topmost 3
+policy-map QOS-OUT-MPLS
+ class CLASS-MQTT-MIX
+  set mpls experimental topmost 3
+ class class-default
+  set mpls experimental topmost 0
+policy-map QOS-IN-MQTT-MIX
+ class CLASS-MQTT-MIX
+  police 640000 conform-action transmit  exceed-action drop 
+  set dscp af31
+ class class-default
+  set dscp default
+policy-map QOS-OUT-MQTT-MIX
+ class CLASS-MQTT-MIX
+  bandwidth 640
+ class class-default
+  fair-queue
+policy-map QOS-OUT-MQTT-VOICE
+ class MQTT-VOICE
+  priority 64
+  set mpls experimental topmost 5
+ class class-default
+  fair-queue
+policy-map QOS-IN-MQTT-VOICE
+ class MQTT-VOICE
+  police 64000 conform-action transmit  exceed-action drop 
+  set dscp ef
+  set mpls experimental imposition 5
+ class class-default
+  set dscp default
+!
+! 
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+interface Loopback0
+ ip address 55.55.55.55 255.255.255.255
+ ip ospf 1 area 0
+!
+interface Loopback1
+ ip vrf forwarding IOT
+ ip address 5.5.5.5 255.255.255.255
+!
+interface Ethernet0/0
+ description Enlace a P1
+ ip address 10.0.0.18 255.255.255.252
+ ip ospf network point-to-point
+ ip ospf 1 area 0
+ mpls ip
+!
+interface Ethernet0/1
+ description Enlace a P2
+ ip address 10.0.0.21 255.255.255.252
+ ip ospf network point-to-point
+ ip ospf 1 area 0
+ mpls ip
+ 
+!
+interface Ethernet0/2
+ description Enlace a CE1
+ ip vrf forwarding IOT
+ ip address 172.16.0.1 255.255.255.252
+ ip ospf network point-to-point
+
+!
+interface Ethernet0/3
+ no ip address
+ shutdown
+!
+interface Ethernet1/0
+ no ip address
+ shutdown
+!
+interface Ethernet1/1
+ no ip address
+ shutdown
+!
+interface Ethernet1/2
+ no ip address
+ shutdown
+!
+interface Ethernet1/3
+ no ip address
+ shutdown
+!
+interface Serial2/0
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+interface Serial2/1
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+interface Serial2/2
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+interface Serial2/3
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+interface Serial3/0
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+interface Serial3/1
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+interface Serial3/2
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+interface Serial3/3
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+router ospf 2 vrf IOT
+ area 0 sham-link 5.5.5.5 6.6.6.6 cost 10
+ redistribute bgp 65001 subnets
+ network 172.16.0.1 0.0.0.0 area 0
+ default-information originate
+!
+router ospf 1
+ router-id 55.55.55.55
+ redistribute static subnets route-map CE1_ROUTES
+!
+router bgp 65001
+ bgp log-neighbor-changes
+ neighbor 66.66.66.66 remote-as 65001
+ neighbor 66.66.66.66 update-source Loopback0
+ !
+ address-family vpnv4
+  neighbor 66.66.66.66 activate
+  neighbor 66.66.66.66 send-community extended
+ exit-address-family
+ !
+ address-family ipv4 vrf IOT
+  network 5.5.5.5 mask 255.255.255.255
+  redistribute ospf 2
+ exit-address-family
+!
+ip forward-protocol nd
+!
+!
+no ip http server
+no ip http secure-server
+ip route 77.77.77.77 255.255.255.255 Ethernet0/2 172.16.0.2
+ip route 192.168.10.0 255.255.255.0 Ethernet0/2 172.16.0.2
+ip route vrf IOT 0.0.0.0 0.0.0.0 192.168.122.100 global
+!
+ip access-list standard CE1_LAN
+ permit 77.77.77.77
+ permit 192.168.10.0 0.0.0.255
+!
+ip access-list extended MQTT-DATA
+ permit tcp any any eq 1883
+ip access-list extended MQTT-TRAFFIC
+ permit tcp any any eq 1883
+ip access-list extended MQTT-VOICE
+ permit tcp any any eq 1883
+!
+!
+route-map CE1_ROUTES permit 10
+ match ip address CE1_LAN
+!
+!
+mpls ldp router-id Loopback0
+!
+control-plane
+!
+!
+!
+!
+!
+!
+!
+!
+line con 0
+ logging synchronous
+line aux 0
+line vty 0 4
+ login
+ transport input none
+!
+!
+end
