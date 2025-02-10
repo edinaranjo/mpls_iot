@@ -1,0 +1,177 @@
+Current configuration : 2021 bytes
+!
+version 15.4
+service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+!
+hostname CE1
+!
+boot-start-marker
+boot-end-marker
+!
+aqm-register-fnf
+!
+!
+no aaa new-model
+clock timezone -05 -5 0
+mmi polling-interval 60
+no mmi auto-configure
+no mmi pvc
+mmi snmp-timeout 180
+!
+!
+!
+!
+!
+!
+!
+!
+
+
+!
+!
+!
+!
+ip cef
+no ipv6 cef
+!
+multilink bundle-name authenticated
+!
+!
+!
+!
+!
+!
+!
+!
+!
+redundancy
+!
+!
+! 
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+interface Loopback0
+ ip address 77.77.77.77 255.255.255.255
+ ip ospf 1 area 0
+!
+interface Ethernet0/0
+ description Enlace a PE1
+ ip address 172.16.0.2 255.255.255.252
+ ip ospf network point-to-point
+ ip ospf 1 area 0
+!
+interface Ethernet0/1
+ description Enlace a CE2
+ ip address 172.16.0.9 255.255.255.252
+ ip ospf network point-to-point
+ ip ospf 1 area 0
+ ip ospf cost 100
+!
+interface Ethernet0/2
+ description LAN CE1
+ ip address 192.168.10.1 255.255.255.0
+ ip ospf 1 area 0
+!
+interface Ethernet0/3
+ no ip address
+ shutdown
+!
+interface Ethernet1/0
+ no ip address
+ shutdown
+!
+interface Ethernet1/1
+ no ip address
+ shutdown
+!
+interface Ethernet1/2
+ no ip address
+ shutdown
+!
+interface Ethernet1/3
+ no ip address
+ shutdown
+!
+interface Serial2/0
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+interface Serial2/1
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+interface Serial2/2
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+interface Serial2/3
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+interface Serial3/0
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+interface Serial3/1
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+interface Serial3/2
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+interface Serial3/3
+ no ip address
+ shutdown
+ serial restart-delay 0
+!
+router ospf 1
+ router-id 77.77.77.77
+ passive-interface Ethernet0/2
+!
+ip forward-protocol nd
+!
+!
+no ip http server
+no ip http secure-server
+!
+!
+!
+!
+control-plane
+!
+!
+!
+!
+!
+!
+!
+!
+line con 0
+ logging synchronous
+line aux 0
+line vty 0 4
+ login
+ transport input none
+!
+!
+end
